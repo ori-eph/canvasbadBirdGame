@@ -7,10 +7,10 @@ var myCoins = [];
 var score = 0;
 
 function startGame() {
-    myGamePiece = new component(30, 30, "red", 10, 120);
+    myGamePiece = new Component(30, 30, "red", 10, 120);
     myGamePiece.gravity = 0.05;
-    myScore = new component("30px", "Consolas", "black", 280, 40, "text");
-    myFinish = new component(20, myGameArea.canvas.width, "lightblue", 460, 0, "finish");
+    myScore = new Component("30px", "Consolas", "black", 280, 40, "text");
+    myFinish = new Component(20, myGameArea.canvas.width, "lightblue", 460, 0, "finish");
     myGameArea.start();
 }
 
@@ -29,7 +29,7 @@ var myGameArea = {
     }
 }
 
-class component {
+class Component {
     constructor(width, height, color, x, y, type) {
         this.type = type;
         this.score = 0;
@@ -50,17 +50,9 @@ class component {
             ctx.fillStyle = this.color;
             ctx.fillText(this.text, this.x, this.y);
         } else {
-            if (this.type == "coin") {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
-                ctx.stroke();
-                ctx.fillStyle = "gold";
-                ctx.fill();
-            }
-            else {
-                ctx.fillStyle = this.color;
-                ctx.fillRect(this.x, this.y, this.width, this.height);
-            }
+            ctx.fillStyle = this.color;
+            ctx.fillRect(this.x, this.y, this.width, this.height);
+
         }
     }
     newPos = function () {
@@ -96,6 +88,28 @@ class component {
             crash = false;
         }
         return crash;
+    }
+}
+
+class Coin extends Component {
+    update = function () {
+        let ctx = myGameArea.context;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.fillStyle = "gold";
+        ctx.fill();
+    }
+}
+
+class Obstacle extends Component {
+    updateGap = function (i) {
+        var changeHBy = Math.floor(Math.random() * (5 - (-5) + 1) + (-5));
+        if (i % 2 == 0) {
+            this.height += changeHBy;
+        } else {
+            this.y -= changeHBy;
+        }
     }
 }
 
@@ -138,14 +152,17 @@ function updateGameArea() {
         minGap = 50;
         maxGap = 200;
         gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
-        myObstacles.push(new component(10, height, "green", x, 0));
-        myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
+        myObstacles.push(new Obstacle(10, height, "green", x, 0));
+        myObstacles.push(new Obstacle(10, x - height - gap, "green", x, height + gap));
         var coinHeight = Math.floor(Math.random() * (200) + 30);
-        myCoins.push(new component(15, 15, "gold", x + 75, coinHeight, "coin"));
+        myCoins.push(new Coin(15, 15, "gold", x + 75, coinHeight, "coin"));
     }
-    for (i = 0; i < myObstacles.length; i += 1) {
+    for (i = 0; i < myObstacles.length; i++) {
         myObstacles[i].x += -1;
         myObstacles[i].update();
+        if (everyinterval(25)) {
+            myObstacles[i].updateGap(i);
+        }
     }
     for (let i = 0; i < myCoins.length; i++) {
         myCoins[i].x += -1;
