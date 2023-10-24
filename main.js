@@ -3,6 +3,7 @@ var myGamePiece;
 var myObstacles = [];
 var myScore;
 var myFinish;
+var myCoins = [];
 
 function startGame() {
     myGamePiece = new component(30, 30, "red", 10, 120);
