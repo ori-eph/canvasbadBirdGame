@@ -4,6 +4,7 @@ var myObstacles = [];
 var myScore;
 var myFinish;
 var myCoins = [];
+var score = 0;
 
 function startGame() {
     myGamePiece = new component(30, 30, "red", 10, 120);
@@ -49,23 +50,38 @@ class component {
             ctx.fillStyle = this.color;
             ctx.fillText(this.text, this.x, this.y);
         } else {
-            ctx.fillStyle = this.color;
-            ctx.fillRect(this.x, this.y, this.width, this.height);
+            if (this.type == "coin") {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.width, 0, 2 * Math.PI);
+                ctx.stroke();
+                ctx.fillStyle = "gold";
+                ctx.fill();
+            }
+            else {
+                ctx.fillStyle = this.color;
+                ctx.fillRect(this.x, this.y, this.width, this.height);
+            }
         }
     }
     newPos = function () {
         this.gravitySpeed += this.gravity;
         this.x += this.speedX;
         this.y += this.speedY + this.gravitySpeed;
-        this.hitBottom();
+        this.hitBottomTop();
     }
-    hitBottom = function () {
+    hitBottomTop = function () {
         var rockbottom = myGameArea.canvas.height - this.height;
+        var top = 0;
         if (this.y > rockbottom) {
             this.y = rockbottom;
             this.gravitySpeed = 0;
         }
+        if (this.y <= top) {
+            this.y = top;
+            this.gravitySpeed = 0;
+        }
     }
+
     crashWith = function (otherobj) {
         var myleft = this.x;
         var myright = this.x + (this.width);
@@ -87,12 +103,20 @@ function updateGameArea() {
     var x, height, gap, minHeight, maxHeight, minGap, maxGap;
     for (i = 0; i < myObstacles.length; i += 1) {
         if (myGamePiece.crashWith(myObstacles[i])) {
+            clearInterval(myGameArea.interval);
             return;
+        }
+    }
+    for (let k = 0; k < myCoins.length; k++) {
+        if (myGamePiece.crashWith(myCoins[k])) {
+            score += 100;
+            myCoins.splice(myCoins.indexOf(myCoins[k]), 1);
         }
     }
     if (myGamePiece.crashWith(myFinish)) {
         myGameArea.clear();
-        myScore.text = "SCORE: " + (myGameArea.frameNo + 1000);
+        score += 1000;
+        myScore.text = "SCORE: " + score;
         myScore.update();
         myGamePiece.newPos();
         myGamePiece.update();
@@ -100,10 +124,12 @@ function updateGameArea() {
         for (i = 0; i < myObstacles.length; i += 1) {
             myObstacles[i].update();
         }
+        clearInterval(myGameArea.interval);
         return;
     }
     myGameArea.clear();
     myGameArea.frameNo += 1;
+    score += 1;
     if (myGameArea.frameNo == 1 || everyinterval(150)) {
         x = myGameArea.canvas.width;
         minHeight = 20;
@@ -114,14 +140,20 @@ function updateGameArea() {
         gap = Math.floor(Math.random() * (maxGap - minGap + 1) + minGap);
         myObstacles.push(new component(10, height, "green", x, 0));
         myObstacles.push(new component(10, x - height - gap, "green", x, height + gap));
+        var coinHeight = Math.floor(Math.random() * (200) + 30);
+        myCoins.push(new component(15, 15, "gold", x + 75, coinHeight, "coin"));
     }
     for (i = 0; i < myObstacles.length; i += 1) {
         myObstacles[i].x += -1;
         myObstacles[i].update();
     }
-    myScore.text = "SCORE: " + myGameArea.frameNo;
+    for (let i = 0; i < myCoins.length; i++) {
+        myCoins[i].x += -1;
+        myCoins[i].update();
+    }
+    myScore.text = "SCORE: " + score;
     myScore.update();
-    myGamePiece.x += 3;
+    myGamePiece.x += 0.08;
     myGamePiece.newPos();
     myGamePiece.update();
     myFinish.update();
